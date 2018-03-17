@@ -1,0 +1,129 @@
+# 解析json
+
+import json
+import collections
+
+
+class ExcJson(object):
+
+    '''
+    json 数据解析
+
+    Name        string                 `json:"name" description:"名称"`
+    URL         string                 `json:"url" description:"请求地址"`
+    Method      string                 `json:"method" description:"请求方式"`
+    Require     string                 `json:"require" description:"前置需求"`
+    ContentType string                 `json:"contenttype" description:"ContentType"`
+    RequestLua  []string               `json:"requestlua" description:"请求前调用的lua文件"`
+    Header      map[string]string      `json:"header" description:"请求头"`
+    URLParams   *json.RawMessage       `json:"urlparams" description:"url请求参数"`
+    Params      *json.RawMessage       `json:"params" description:"请求参数"`
+    Return      map[string]interface{} `json:"return" description:"期望返回"`
+    ReturnLua   []string               `json:"returnlua" description:"期望返回lua验证"`
+    NextLua     []string               `json:"nextjs" description:"执行后续命令前调用的lua文件"`
+    Context     map[string]string      `json:"context" description:"上下文"`
+    SubCommand  []*Command             `json:"subcommand" description:"子命令"`
+    '''
+    def __init__(self,jsonFile='ceshi.json'):
+        f = open(jsonFile, 'r', encoding='utf-8')
+        self.load_dict = json.load(f)
+        f.close()
+    def getMap(self):
+
+        map = collections.OrderedDict()
+        for all in self.load_dict:
+            name = self.getName(all)
+            require = self.getRequire(all)
+            if all.__contains__('require'):
+                map[require] = all
+        return map
+
+    def getCommond(self):
+        commond={}
+        for all in self.load_dict:
+            name = self.getName(all)
+            #  print(name)
+            url = self.getUrl(all)
+            method = self.getMethod(all)
+
+            header = self.getHeader(all)
+            params = self.getParams(all)
+            returnG = self.getReturn(all)
+            context = self.getContext(all)
+            require = self.getRequire(all)
+            if all.__contains__('require') == False:
+                commond[name] = all 
+        return commond
+
+    def getName(self,dict):
+        name =""
+        for k, v in dict.items():
+            if k == "name":
+                name = v
+        return name
+
+
+    def getUrl(self,dict):
+        url = ""
+        for k, v in dict.items():
+            if k == "url":
+                url = v
+        return url
+
+
+    def getMethod(self,dict):
+        value = ""
+        for k, v in dict.items():
+            if k == "method":
+                value = v
+        return value
+
+
+    def getHeader(self,dict):
+        header = ""
+
+        for k, v in dict.items():
+            if k == "header":
+                header = v
+        return header
+
+
+    def getRequire(self,dict):
+        value = ""
+        for k, v in dict.items():
+            if k == "require":
+                value = v
+        return value
+
+
+    def getParams(self,dict):
+        value = ""
+        for k, v in dict.items():
+            if k == "params" or k == "urlparams":
+                value = v
+        return value
+
+
+    def getReturn(self,dict):
+        value = ""
+        for k, v in dict.items():
+            if k == "return":
+                value = v
+        return value
+
+
+    def getContext(self,dict):
+        value = ""
+        for k, v in dict.items():
+            if k == "context":
+                value = v
+        return value
+
+
+           
+if __name__ == '__main__':
+
+    commond = ExcJson("ceshi.json")
+    s = commond.getCommond()
+    print(s)
+   

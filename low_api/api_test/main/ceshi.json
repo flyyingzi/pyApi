@@ -1,0 +1,41 @@
+[{
+    "name": "登陆",
+    "url": "{{.HOST}}/login",
+    "method": "post",
+    "requestlua":["examples/header.lua"],
+    "header":{
+        "Content-Type":"application/x-www-form-urlencoded"
+    },
+    "params": {
+        "login_name": "18264609967",
+        "password": "123456"
+    },
+    "return": {
+        "code": "0",
+        "data.nickname": "唯一度"
+    },
+    "context":{
+        "data.userid": "userid"
+    }
+},{
+    "name": "会员列表",
+    "require":"登陆",
+    "url": "{{.HOST}}/members",
+    "method": "get",
+    "requestlua":["examples/header.lua"],
+    "header":{
+        "X-Api-ShopId":"e471caec039654e748d82c40bb56e195",
+        "Content-Type":"application/x-www-form-urlencoded"
+    },
+    "urlparams": {
+       "limit":"20",
+       "skip":"",
+       "sort":"-addtime",
+       "fields":"user.mobile"
+    },
+    "return": {
+        "code": "0",
+        "data.list.0.user.mobile":"18865832783",
+        "data.total":6
+    }
+}]
