@@ -2,7 +2,7 @@
 
 import json
 import collections
-
+from excConfig import ExcConfig
 
 class ExcJson(object):
 
@@ -25,11 +25,13 @@ class ExcJson(object):
     SubCommand  []*Command             `json:"subcommand" description:"子命令"`
     '''
     def __init__(self,jsonFile='ceshi.json'):
+        self.config = ExcConfig()
+
         f = open(jsonFile, 'r', encoding='utf-8')
         self.load_dict = json.load(f)
         f.close()
     def getMap(self):
-
+        #没执行的命令
         map = collections.OrderedDict()
         for all in self.load_dict:
             name = self.getName(all)
@@ -64,10 +66,15 @@ class ExcJson(object):
 
 
     def getUrl(self,dict):
-        url = ""
-        for k, v in dict.items():
-            if k == "url":
-                url = v
+        url = {}
+        vaules = self.config.return_Value()
+        host = vaules["HOST"]
+        for key, value in dict.items():
+            if key == "url":
+                    if "{{.HOST}}" in value:
+                        url = value.replace('{{.HOST}}',host)
+                    else:    
+                        url = value
         return url
 
 
@@ -80,11 +87,12 @@ class ExcJson(object):
 
 
     def getHeader(self,dict):
-        header = ""
+        header = {}
 
         for k, v in dict.items():
             if k == "header":
                 header = v
+        header.update(self.config.return_Header())
         return header
 
 
@@ -97,11 +105,12 @@ class ExcJson(object):
 
 
     def getParams(self,dict):
-        value = ""
-        for k, v in dict.items():
-            if k == "params" or k == "urlparams":
-                value = v
-        return value
+        params = {}
+        for key, value in dict.items():
+            if key == "params" or key == "urlparams":
+                        params = value  
+        params.update(self.config.return_Body()) 
+        return params
 
 
     def getReturn(self,dict):

@@ -13,7 +13,7 @@ class GetCommond:
     def get_commond_name(self,dict):
         name =""
         for k, v in dict.items():
-            for key,value in v.items():
+            for key, value in v.items():
                 if key == "name":
                     name = value
         return name
