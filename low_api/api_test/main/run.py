@@ -4,7 +4,7 @@ from excJson import ExcJson
 from getCommond import GetCommond
 from excConfig import ExcConfig
 from excJson import ExcJson
-import os, sys, json
+import os, sys, json,re
 import time
 import collections
 
@@ -24,7 +24,8 @@ class Run(object):
         self.get_Config = ExcConfig()
         self.list =[]#commond list
         self.lastContext = {}# 最终的 context 上下文
-        self.Cookies = {}
+        self.Cookies = {}# cookie 处理
+        self.number = 0 #成功个数 统计用
 
 
     def engine(self):
@@ -40,7 +41,7 @@ class Run(object):
             
             name = self.get_cc.getName(comond_value)
             requir = self.get_cc.getRequire(comond_value)
-            print('start:' + name)
+            # print('start:' + name)
 
             url = self.get_cc.getUrl(comond_value)
             method = self.get_cc.getMethod(comond_value)
@@ -76,32 +77,72 @@ class Run(object):
 
         result = self.engine()
         #打印返回数据
-   
         print(result.text)
         json =result.json()
-        yl_name = self.get_Commond.get_commond_name(self.commond)
-        returnG = self.get_Commond.get_commond_Return(self.commond)
-        context = self.get_Commond.get_commond_Context(self.commond)
-        
+
+        commond_name = self.list[-1]
+
+        yl_name = self.get_Commond.get_commond_name(self.commond,commond_name)
+        returnG = self.get_Commond.get_commond_Return(self.commond,commond_name)
+        context = self.get_Commond.get_commond_Context(self.commond,commond_name)
+        #是否存在数字 .shuzi. 格式
+        def hasNumbers(inputString):
+            return  bool(re.search(r'/^\.\d*\.$/', inputString))
+
         #断言 
         Result = True
         for reName , reVal  in returnG.items():
-            name = '["' + reName + '"]'
-            if '.' in reName:
-                key  ='json' + name.replace('.','"]["') 
-                value = eval(key)
-                if value != reVal:
-                    print(yl_name+ ':测试不通过！  '+reName +':返回结果为：' + value + '  不是：' + reVal)
-                    Result = False
-                    break
+            #如果存在数字
+            if hasNumbers(reName):
+                # 获得数字  并进行分割  先取到数字之前的  根据数字取之后的
+                number  = '.'+ re.findall(r'\d+', reName)[-1] + '.'
+                name_all = reName.split(number)
+                
+                if '.' in name_all[0]:
+                    mm = '["' + name_all[0] + '"]'
+                    key  ='json' + mm.replace('.','"]["') 
+                    
+                    value = eval(key)
+                    list = value[int(re.findall(r'\d+', reName)[-1])]
+                    
+                    if '.' in name_all[-1]:
+                        key  ='list' +'["' +name_all[-1].replace('.','"]["') + '"]'
+                        print(key)
+                        vv = eval(key)
+                        
+                        if vv != reVal:
+                            print(yl_name+ ':测试不通过！  '+reName +':返回结果为：' + str(vv) + '  不是：' + str(reVal))
+                            Result = False
+                            break
+                        
+                    else:
+                        tt = '["' + list + '"]'
+                        key = 'list'+ tt
+                        vv = eval(key)
+                        if vv != reVal:
+                            print(yl_name+ ':测试不通过！  '+reName +':返回结果为：' + str(vv) + '  不是：' + str(reVal))
+                            Result = False
+                            break
+                        
             else:
-                key = 'json' + name
-                value = eval(key)
-                if value != reVal:
-                    print(yl_name + ':测试不通过！  '+reName +':返回结果为：' + value + '  不是：' + reVal)
-                    Result = False
-                    break
+                #如果没有数字  即不存在list  直接取值
+                name = '["' + reName + '"]'
+                if '.' in reName:
+                    key  ='json' + name.replace('.','"]["') 
+                    value = eval(key)
+                    if value != reVal:
+                        print(yl_name+ ':测试不通过！  '+reName +':返回结果为：' + str(value) + '  不是：' + str(reVal))
+                        Result = False
+                        break
+                else:
+                    key = 'json' + name
+                    value = eval(key)
+                    if value != reVal:
+                        print(yl_name + ':测试不通过！  '+reName +':返回结果为：' + str(value) + '  不是：' + str(reVal))
+                        Result = False
+                        break
         if Result:
+            self.number +=1
             print(yl_name + "测试通过！")
 
         # 上下文处理   讲value(获取其值) ： key 的形式 保存到lastlist 中 
@@ -126,19 +167,18 @@ class Run(object):
         context 把所有待执行命令 更新上下文
         '''
         dic = self.result()
-        va = ""
+        va = []
         for value in self.commond.values():
-                va = value['name']
-                if value.__contains__('va'):
-                    print("name 值不能为空，且必须存在。")
-                    break
-        for require,v in self.map.items():            
-                vv = v['name']
-                if require == va:
-                    self.commond.update({vv: v})
-                else:
-                    break
-
+                va.append(value['name'])
+                
+            
+        for name,v in self.map.items():
+            self.commond.update({name: v})
+            self.json.deleteMap(self.map , name)
+            break
+        # print("map:",self.map) 
+        # print("comond:",self.commond)              
+       
         #{{.}} 上下文格式调整  将commond 中的数据进行更换
         for key, va in dic.items():
             name = "{{." + key + "}}"
@@ -159,17 +199,18 @@ class Run(object):
         return self.commond
     def start(self):
         #开始执行
+        number = 0
+        all = 0
         for i in range(len(self.map)+1):
-            print(i)
+            number += 1
+            all = len(self.map)+1
             self.update()
-
+        print("汇总：一共执行："+ str(self.get_cc.getNumber()) +" 个用例！"
+            "成功了："+ str(self.number) +" 个用例！"
+            "失败了："+ str(self.get_cc.getNumber() - self.number) +" 个用例！")
    
 
 
 
 if __name__ == '__main__':
     run = Run("ceshi.json").start()
-    
-    # for k,v in commond.items():
-    #     print(k+"-------------")
-    #     print(v)

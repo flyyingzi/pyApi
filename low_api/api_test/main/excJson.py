@@ -30,6 +30,11 @@ class ExcJson(object):
         f = open(jsonFile, 'r', encoding='utf-8')
         self.load_dict = json.load(f)
         f.close()
+
+    def getNumber(self):
+        
+        return len(self.load_dict)
+
     def getMap(self):
         #没执行的命令
         map = collections.OrderedDict()
@@ -37,8 +42,12 @@ class ExcJson(object):
             name = self.getName(all)
             require = self.getRequire(all)
             if all.__contains__('require'):
-                map[require] = all
+               map.update({name:all})
         return map
+
+    def deleteMap(self, dic ,name):
+
+        dic.pop(name)
 
     def getCommond(self):
         commond={}
@@ -133,6 +142,6 @@ class ExcJson(object):
 if __name__ == '__main__':
 
     commond = ExcJson("ceshi.json")
-    s = commond.getCommond()
+    s = commond.getMap()
     print(s)
    

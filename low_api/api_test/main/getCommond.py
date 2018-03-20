@@ -10,11 +10,11 @@ class GetCommond:
     def __init__(self):
         self.config = ExcConfig()
 
-    def get_commond_name(self,dict):
+    def get_commond_name(self,dict,real_name):
         name =""
         for k, v in dict.items():
             for key, value in v.items():
-                if key == "name":
+                if key == "name" and value == real_name:
                     name = value
         return name
 
@@ -72,24 +72,27 @@ class GetCommond:
         return params
 
 
-    def get_commond_Return(self,dict):
+    def get_commond_Return(self,dict,real_name):
         value1 = ""
         for k, v in dict.items():
-            for key,value in v.items():
-                if key == "return":
-                    value1 = value
+            if k == real_name:
+                if v.__contains__('return'):
+                    for key,value in v.items():
+                        if key == "return":
+                            value1 = value
         return value1
 
 
-    def get_commond_Context(self,dict):
+    def get_commond_Context(self,dict,real_name):
         context = ""
         for k, v in dict.items():
-            if v.__contains__('context'):
-                for key,value in v.items():
-                    if key == "context":
-                        context = value
-            else:
-                context = ""
+            if k == real_name:
+                if v.__contains__('context'):
+                    for key,value in v.items():
+                        if key == "context":
+                            context = value
+                else:
+                    context = ""
         return context
 
 if __name__ == '__main__':
