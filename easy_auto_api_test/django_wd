@@ -1,0 +1,5 @@
+
+模型：
+    改变你的模型（in models.py）。
+    运行以为这些更改创建迁移python manage.py makemigrations
+    运行以将这些更改应用于数据库。python manage.py migrate
